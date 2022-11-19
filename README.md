@@ -1,0 +1,2 @@
+# magni
+image upscaler
