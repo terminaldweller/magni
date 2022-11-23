@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Superscaler."""
+"""Superscaler benchmarks. sorta."""
 # https://learnopencv.com/super-resolution-in-opencv/
 # https://github.com/xinntao/ESRGAN
 # https://github.com/xinntao/Real-ESRGAN
@@ -11,8 +11,9 @@
 # https://github.com/Saafke/FSRCNN_Tensorflow/tree/master/models
 # https://github.com/fannymonori/TF-LapSRN/tree/master/export
 
-import cv2
 import time
+
+import cv2
 
 
 def edsr_superscaler(img):
