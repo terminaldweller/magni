@@ -12,7 +12,8 @@ import typing
 
 import bs4
 import cv2  # type:ignore
-import playwright
+
+# import playwright
 import requests
 
 
@@ -36,6 +37,28 @@ class Argparser:  # pylint: disable=too-few-public-methods
             default=6666,
         )
         self.args = self.parser.parse_args()
+
+
+def get_manganato_headers(url: str) -> typing.Dict[str, str]:
+    """Sets the ncessary headers."""
+    headers = {
+        "Accept": "image/avif,image/webp,*/*",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Sec-Fetch-Dest": "image",
+        "Sec-Fetch-Mode": "no-cors",
+        "Sec-Fetch-Site": "cross-site",
+        "Sec-GPC": "1",
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache",
+        "TE": "trailers",
+        "Referer": url,
+        "User-Agent": get_user_agent(),
+    }
+
+    return headers
 
 
 def get_model_path() -> str:
@@ -85,10 +108,15 @@ def fsrcnn_superscaler(img):
 
 
 def get_user_agent() -> str:
+    """Returns a random user agent."""
+    # user_agents = [
+    #     "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0",
+    #     "Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0",
+    #     "Mozilla/5.0 (X11; Linux x86_64; rv:95.0) Gecko/20100101 Firefox/95.0",
+    #     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+    # ]
     user_agents = [
-        "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0",
-        "Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0",
-        "Mozilla/5.0 (X11; Linux x86_64; rv:95.0) Gecko/20100101 Firefox/95.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
     ]
 
     return user_agents[random.randint(0, len(user_agents) - 1)]
@@ -118,7 +146,7 @@ def single_get(url: str) -> requests.Response:
         allow_redirects=True,
         timeout=10,
         proxies=get_proxies(),
-        headers={"User-Agent": get_user_agent()},
+        headers=get_manganato_headers(url),
     )
 
 
@@ -137,7 +165,7 @@ def single_get_tag(url_tag_pair: list) -> typing.Tuple[requests.Response, str]:
             allow_redirects=True,
             timeout=10,
             proxies=get_proxies(),
-            headers={"User-Agent": get_user_agent()},
+            headers=get_manganato_headers(url_tag_pair[0]),
         ),
         url_tag_pair[1],
     )
@@ -152,6 +180,7 @@ def multi_get_tag(
     return response_list
 
 
+# flake8: noqa: E501
 async def model_downloader() -> typing.Optional[
     typing.List[typing.Tuple[str, str]]
 ]:
@@ -226,20 +255,20 @@ def serve(port_number: int) -> None:
         httpd.serve_forever()
 
 
-async def get_images(url) -> None:
-    """Get the images with a headless browser because CORS."""
-    async with playwright.async_api.async_playwright as async_p:
-        for browser_type in [
-            async_p.chromium,
-            async_p.firefox,
-            async_p.webkit,
-        ]:
-            browser = await browser_type.launch()
-            page = await browser.new_page()
-            await page.goto(url)
-            image_list: typing.List = []
-            all_links = page.query_selector_all("img")
-            await browser.close()
+# async def get_images(url) -> None:
+#     """Get the images with a headless browser because CORS."""
+#     async with playwright.async_api.async_playwright as async_p:
+#         for browser_type in [
+#             async_p.chromium,
+#             async_p.firefox,
+#             async_p.webkit,
+#         ]:
+#             browser = await browser_type.launch()
+#             page = await browser.new_page()
+#             await page.goto(url)
+#             image_list: typing.List = []
+#             all_links = page.query_selector_all("img")
+#             await browser.close()
 
 
 async def handle_downloads(argparser: Argparser) -> None:
