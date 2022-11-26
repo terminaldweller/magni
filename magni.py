@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Magni."""
+# HTTPS_PROXY=socks5h://127.0.0.1:9995 ./magni.py --url https://chapmanganato.com/manga-dt980702/chapter-184
 
 import argparse
 import asyncio
@@ -8,12 +9,12 @@ import http.server
 import os
 import random
 import socketserver
+import sys
 import typing
 
 import bs4
 import cv2  # type:ignore
-
-# import playwright
+import jinja2
 import requests
 
 
@@ -30,11 +31,18 @@ class Argparser:  # pylint: disable=too-few-public-methods
             default=False,
         )
         self.parser.add_argument(
+            "--method",
+            "-m",
+            type=str,
+            help="the method to use. either fsrcnn or espcn",
+            default="espcn",
+        )
+        self.parser.add_argument(
             "--port",
             "-p",
             type=int,
             help="the port to serve the images over",
-            default=6666,
+            default=8086,
         )
         self.args = self.parser.parse_args()
 
@@ -107,6 +115,7 @@ def fsrcnn_superscaler(img):
     return result
 
 
+# flake8: noqa: E501
 def get_user_agent() -> str:
     """Returns a random user agent."""
     # user_agents = [
@@ -217,7 +226,7 @@ async def model_downloader() -> typing.Optional[
     return url_tag_list
 
 
-async def download_all_images(url: str) -> None:
+async def download_all_images(url: str) -> typing.Optional[typing.List[str]]:
     """Sniffs images."""
     response = requests.get(url, timeout=10, allow_redirects=True)
     if response.content is None:
@@ -240,48 +249,81 @@ async def download_all_images(url: str) -> None:
     if response_list is None:
         return None
 
+    image_name_list: typing.List[str] = []
     for response, name in response_list:
+        image_name_list.append(name)
         with open(get_image_path() + "/" + name, "w+b") as image:
             image.write(response.content)
 
-    return None
+    return image_name_list
 
 
-def serve(port_number: int) -> None:
-    """Startup a simple http file server."""
-    handler = http.server.SimpleHTTPRequestHandler
-
-    with socketserver.TCPServer(("", port_number), handler) as httpd:
-        httpd.serve_forever()
-
-
-# async def get_images(url) -> None:
-#     """Get the images with a headless browser because CORS."""
-#     async with playwright.async_api.async_playwright as async_p:
-#         for browser_type in [
-#             async_p.chromium,
-#             async_p.firefox,
-#             async_p.webkit,
-#         ]:
-#             browser = await browser_type.launch()
-#             page = await browser.new_page()
-#             await page.goto(url)
-#             image_list: typing.List = []
-#             all_links = page.query_selector_all("img")
-#             await browser.close()
+def superres_images(image_list: typing.List[str], method: str) -> None:
+    """Superscales the images."""
+    for image in image_list:
+        img = cv2.imread(get_image_path() + "/" + image)
+        if method == "espcn":
+            result = espcn_superscaler(img)
+        elif method == "fsrcnn":
+            result = fsrcnn_superscaler(img)
+        cv2.imwrite(get_image_path() + "/" + image, result)
 
 
-async def handle_downloads(argparser: Argparser) -> None:
+async def handle_downloads(
+    argparser: Argparser,
+) -> typing.Optional[typing.List[str]]:
     """Download the models and the images."""
-    await asyncio.gather(
+    _, image_name_list = await asyncio.gather(
         model_downloader(), download_all_images(argparser.args.url)
     )
+
+    return image_name_list
+
+
+def fill_jinja_template(image_name_list: typing.List[str]) -> None:
+    """Fills the jinja template."""
+    environment = jinja2.Environment(
+        autoescape=True,
+        loader=jinja2.FileSystemLoader(os.getcwd()),
+    )
+    template = environment.get_template(os.path.join("template.jinja2"))
+    temp_head = template.render({"image_list": image_name_list})
+    with open(
+        get_image_path() + "/" + "index.html", encoding="utf-8", mode="w"
+    ) as out_file:
+        out_file.write(temp_head)
+
+
+class MagniHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+    """We want to server our own index.html from an arbitrary location."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=get_image_path(), **kwargs)
+
+
+# TODO-add graceful shutdown
+def serve(port: int) -> None:
+    """Startup a simple http file server."""
+    handler = MagniHTTPRequestHandler
+
+    print("now servering on {}:{}".format("127.0.0.1", repr(port)))
+    with socketserver.TCPServer(("", port), handler) as httpd:
+        httpd.serve_forever()
 
 
 def main() -> None:
     """Entry point."""
     argparser = Argparser()
-    asyncio.run(handle_downloads(argparser))
+    image_name_list = asyncio.run(handle_downloads(argparser))
+
+    if image_name_list is not None:
+        superres_images(image_name_list, argparser.args.method)
+        print("finished superresing images.")
+    else:
+        print("failed to download all images.", file=sys.stderr)
+        sys.exit(1)
+    fill_jinja_template(image_name_list)
+    serve(argparser.args.port)
 
 
 if __name__ == "__main__":

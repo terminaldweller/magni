@@ -7,8 +7,12 @@
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body style="font-size:14px;">
-  <div>
-    
-  </div>
+  <p align="center">
+    <div>
+      {% for image in image_list %}
+      <img src={{image}} alt="">
+      {% endfor %}
+    </div>
+  </p>
 </body>
 </html>
