@@ -95,6 +95,8 @@ def get_image_path() -> str:
     return image_path
 
 
+# TODO-both models are garbage. should train models specifically
+# for black and white pics.
 def espcn_superscaler(img):
     """ESPCN superscaler."""
     superres = cv2.dnn_superres.DnnSuperResImpl_create()
@@ -203,8 +205,18 @@ async def model_downloader() -> typing.Optional[
         "https://github.com/Saafke/FSRCNN_Tensorflow/raw/master/models/FSRCNN_x2.pb",
     ]
 
+    url_list: typing.List[str] = []
+    for model in down_list:
+        if (
+            os.path.exists(
+                get_model_path() + "/" + model[model.rfind("/") + 1 :]
+            )
+            is False
+        ):
+            url_list.append(model)
+
     url_tag_list: typing.List[typing.Tuple[str, str]] = []
-    for url in down_list:
+    for url in url_list:
         url_tag_list.append((url, url[url.rfind("/") + 1 :]))
     response_list: typing.Optional[
         typing.List[typing.Tuple[requests.Response, str]]
@@ -306,7 +318,7 @@ def serve(port: int) -> None:
     """Startup a simple http file server."""
     handler = MagniHTTPRequestHandler
 
-    print("now servering on {}:{}".format("127.0.0.1", repr(port)))
+    print(f"now servering on 127.0.0.1:{repr(port)}")
     with socketserver.TCPServer(("", port), handler) as httpd:
         httpd.serve_forever()
 
