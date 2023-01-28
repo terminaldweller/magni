@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Magni."""
-# HTTPS_PROXY=socks5h://127.0.0.1:9995 ./magni.py --url https://chapmanganato.com/manga-dt980702/chapter-184
+# HTTPS_PROXY=socks5h://127.0.0.1:9094 ./magni.py --url https://chapmanganato.com/manga-dt980702/chapter-184
 
 import argparse
 import asyncio
@@ -28,7 +28,7 @@ class Argparser:  # pylint: disable=too-few-public-methods
             "-u",
             type=str,
             help="the url to the page containing the images",
-            default=False,
+            default="",
         )
         self.parser.add_argument(
             "--method",
