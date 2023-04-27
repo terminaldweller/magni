@@ -31,17 +31,24 @@ HTTPS_PROXY=socks5h://127.0.0.1:9094 poetry run ./magni.py --url https://chapman
 ## Env Vars
 magni recognizes three environment variables:</br>
 
-### HTTPS_PROXY
-You must specify a socks5 proxy here since magni uses `pysocks` to make the connections.</br>
-If the env var is not defined magni will not use any proxy.</br>
+### HTTP_PROXY/HTTPS_PROXY
+You can also specify a socks5 proxy here since magni uses `pysocks` to make the connections.</br>
+If the env vars are not defined or are empty magni will not use any proxy.</br>
 
 ### MAGNI_MODEL_PATH
-Path to the directory where magni will store the model.</br>
-If the env var is not defined, magni will use `./models` as a default value.</br>
+Path to the directory where magni will store the models.</br>
+If the env var is not defined or is empty, magni will use `./models` as a default value.</br>
 
 ### MAGNI_IMAGE_PATH
 Path to the directory where magni will store the upscaled images.</br>
-If the env var is not defined or empty magni will use `./images` as a default value.</br>
+If the env var is not defined or is empty magni will use `./images` as a default value.</br>
+
+### MAGNI_USER_AGENT
+The user agent magni will use the download the images.</br>
+If the env var is not defined or is empty, magni will use a default user agent you can see below:</br>
+```
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36
+```
 
 ## TODO
 * currently the models we are using are not as effective. I should either fine ones that are specifically trained on greyscale images or just train some myself.</br>

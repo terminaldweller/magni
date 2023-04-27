@@ -120,17 +120,13 @@ def fsrcnn_superscaler(img):
 # flake8: noqa: E501
 def get_user_agent() -> str:
     """Returns a random user agent."""
-    # user_agents = [
-    #     "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0",
-    #     "Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0",
-    #     "Mozilla/5.0 (X11; Linux x86_64; rv:95.0) Gecko/20100101 Firefox/95.0",
-    #     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-    # ]
-    user_agents = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-    ]
+    user_agent: str = ""
+    if "MAGNI_USER_AGENT" in os.environ and os.environ["MAGNI_USER_AGENT"]:
+        user_agent = os.environ["MAGNI_USER_AGENT"]
+    else:
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"
 
-    return user_agents[secrets.randbelow(len(user_agents))]
+    return user_agent
 
 
 def get_proxies() -> typing.Dict:
