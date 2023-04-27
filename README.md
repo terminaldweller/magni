@@ -28,6 +28,23 @@ you can obviously use `poetry run` as well:
 HTTPS_PROXY=socks5h://127.0.0.1:9094 poetry run ./magni.py --url https://chapmanganato.com/manga-dt980702/chapter-184
 ```
 
+### Docker
+
+#### Build
+```sh
+docker build -t magni:latest --load .
+```
+
+#### Run
+```sh
+docker run -p 8086:8086 \
+  -e HTTPS_PROXY=socks5h://192.168.1.100:9050 \
+  -e MAGNI_MODEL_PATH=/opt/magni_models \
+  -e MAGNI_IMAGE_PATH=/opt/magni_images \
+  -v ./models:/opts/magni_models \
+  magni:latest --url https://chapmanganato.com/manga-dt980702/chapter-184
+```
+
 ## Env Vars
 magni recognizes three environment variables:</br>
 
