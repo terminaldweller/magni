@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """Magni."""
-# HTTPS_PROXY=socks5h://127.0.0.1:9094 ./magni.py --url https://chapmanganato.com/manga-dt980702/chapter-184
 
 import argparse
 import asyncio
@@ -8,6 +7,7 @@ import concurrent.futures
 import http.server
 import os
 import random
+import secrets
 import socketserver
 import sys
 import typing
@@ -130,7 +130,7 @@ def get_user_agent() -> str:
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
     ]
 
-    return user_agents[random.randint(0, len(user_agents) - 1)]
+    return user_agents[secrets.randbelow(len(user_agents))]
 
 
 def get_proxies() -> typing.Dict:
@@ -192,9 +192,7 @@ def multi_get_tag(
 
 
 # flake8: noqa: E501
-async def model_downloader() -> typing.Optional[
-    typing.List[typing.Tuple[str, str]]
-]:
+async def model_downloader() -> typing.Optional[typing.List[typing.Tuple[str, str]]]:
     """Download the models."""
     down_list = [
         "https://github.com/fannymonori/TF-ESPCN/raw/master/export/ESPCN_x3.pb",
@@ -208,9 +206,7 @@ async def model_downloader() -> typing.Optional[
     url_list: typing.List[str] = []
     for model in down_list:
         if (
-            os.path.exists(
-                get_model_path() + "/" + model[model.rfind("/") + 1 :]
-            )
+            os.path.exists(get_model_path() + "/" + model[model.rfind("/") + 1 :])
             is False
         ):
             url_list.append(model)
@@ -223,10 +219,7 @@ async def model_downloader() -> typing.Optional[
     ] = multi_get_tag(url_tag_list)
 
     model_path: str = os.getcwd()
-    if (
-        "MAGNI_MODEL_PATH" in os.environ
-        and os.environ["MAGNI_MODEL_PATH"] != ""
-    ):
+    if "MAGNI_MODEL_PATH" in os.environ and os.environ["MAGNI_MODEL_PATH"] != "":
         model_path = os.environ["MAGNI_MODEL_PATH"]
 
     if response_list is None:
